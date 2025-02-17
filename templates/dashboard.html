@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Daily Stats Dashboard</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <style>
+    /* Container for chart and checkbox */
+    #chart-wrapper {
+      position: relative;
+      max-width: 1400px;  /* Increased overall container width */
+      margin: 40px auto 0 auto;  /* Added top margin (40px) to create blank space */
+    }
+    #numerical-chart-container {
+      width: 100%;
+      height: 400px;
+    }
+    /* Position the checkbox inside the container's right side */
+    #trendline-checkbox-container {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: white;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    /* Styling for GitHub-style binary boxes */
+    .binary-grid {
+      display: flex;
+      flex-wrap: wrap;
+    }
+    .binary-box {
+      width: 20px;
+      height: 20px;
+      margin: 2px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: white;
+    }
+    .binary-box.active {
+      background-color: #4caf50;
+    }
+    .binary-container {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="chart-wrapper">
+    <div id="numerical-chart-container"></div>
+    <div id="trendline-checkbox-container">
+      <label><input type="checkbox" id="trendline-toggle"> Show Trendlines</label>
+    </div>
+  </div>
+
+  <h2>Binary Metrics</h2>
+  <div class="binary-container">
+    <h3>Morning Routine</h3>
+    <div id="morning-routine-grid" class="binary-grid"></div>
+  </div>
+  <div class="binary-container">
+    <h3>Running</h3>
+    <div id="running-grid" class="binary-grid"></div>
+  </div>
+
+  <script>
+    // Compute a linear regression trendline for an array of numerical data.
+    function computeTrendline(data) {
+      var n = data.length;
+      var sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+      for (var i = 0; i < n; i++) {
+        var x = i;
+        var y = data[i];
+        sumX += x;
+        sumY += y;
+        sumXY += x * y;
+        sumXX += x * x;
+      }
+      var slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+      var intercept = (sumY - slope * sumX) / n;
+      var trendData = [];
+      for (var i = 0; i < n; i++) {
+        trendData.push(slope * i + intercept);
+      }
+      return trendData;
+    }
+    
+    $(function(){
+      $.getJSON("/data", function(data) {
+        // Sort data by date (ascending)
+        data.sort(function(a, b) {
+          return new Date(a.date) - new Date(b.date);
+        });
+  
+        // Extract dates and numerical data
+        var dates = data.map(function(entry) { return entry.date; });
+        var wakeup_time = data.map(function(entry) { return parseFloat(entry.wakeup_time) || null; });
+        var sleep_hours = data.map(function(entry) { return parseFloat(entry.sleep_hours) || null; });
+        var healthy_eat = data.map(function(entry) { return parseFloat(entry.healthy_eat) || null; });
+        var exercise_minutes = data.map(function(entry) { return parseFloat(entry.exercise_minutes) || null; });
+        var homework_minutes = data.map(function(entry) { return parseFloat(entry.homework_minutes) || null; });
+        var productivity = data.map(function(entry) { return parseFloat(entry.productivity) || null; });
+        var mood = data.map(function(entry) { return parseFloat(entry.mood) || null; });
+  
+        // Create the numerical metrics chart
+        var chart = Highcharts.chart('numerical-chart-container', {
+          chart: { type: 'line' },
+          title: { text: 'Numerical Metrics Over Time' },
+          xAxis: { categories: dates },
+          yAxis: { title: { text: 'Value' } },
+          series: [
+            { name: 'Wakeup Time', data: wakeup_time },
+            { name: 'Sleep Hours', data: sleep_hours },
+            { name: 'Healthy Eat', data: healthy_eat },
+            { name: 'Exercise Minutes', data: exercise_minutes },
+            { name: 'Homework Minutes', data: homework_minutes },
+            { name: 'Productivity', data: productivity },
+            { name: 'Mood', data: mood }
+          ]
+        });
+        
+        // Keep track of the trendline series so we can remove them later.
+        var trendlineSeries = [];
+  
+        // Toggle trendlines when the checkbox changes
+        $('#trendline-toggle').change(function() {
+          if (this.checked) {
+            chart.series.forEach(function(serie) {
+              if (!serie.name.endsWith("Trendline")) {
+                var originalData = serie.options.data;
+                var trendData = computeTrendline(originalData);
+                var trendline = chart.addSeries({
+                  name: serie.name + " Trendline",
+                  data: trendData,
+                  color: serie.color,
+                  dashStyle: 'ShortDash',
+                  marker: { enabled: false },
+                  enableMouseTracking: false
+                }, false);
+                trendlineSeries.push(trendline);
+              }
+            });
+            chart.redraw();
+          } else {
+            trendlineSeries.forEach(function(ts) {
+              ts.remove(false);
+            });
+            trendlineSeries = [];
+            chart.redraw();
+          }
+        });
+  
+        // Function to create GitHub-style binary grids.
+        function createBinaryGrid(containerId, metric) {
+          var container = $('#' + containerId);
+          container.empty();
+          data.forEach(function(entry) {
+            var box = $('<div class="binary-box"></div>');
+            if (entry[metric] === true || entry[metric] === "true" || entry[metric] === 1 || entry[metric] === "1") {
+              box.addClass('active');
+            }
+            container.append(box);
+          });
+        }
+  
+        createBinaryGrid('morning-routine-grid', 'morning_routine');
+        createBinaryGrid('running-grid', 'running');
+      });
+    });
+  </script>
+</body>
+</html>
