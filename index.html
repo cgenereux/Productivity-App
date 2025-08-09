@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusFlow — Productivity</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app">
+        <header class="app-header">
+            <h1>FocusFlow</h1>
+            <div class="date-picker">
+                <button id="prevDay" aria-label="Previous Day">◀</button>
+                <span id="currentDateLabel"></span>
+                <button id="nextDay" aria-label="Next Day">▶</button>
+            </div>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab active" data-tab="today">Today</button>
+            <button class="tab" data-tab="backlog">Backlog</button>
+            <button class="tab" data-tab="analytics">Analytics</button>
+            <button class="tab" data-tab="settings">Settings</button>
+        </nav>
+
+        <main>
+            <section id="tab-today" class="tab-panel active">
+                <div class="panel-header">
+                    <div>
+                        <h2>Today</h2>
+                        <p class="sub">Drag to reorder or move between lists.</p>
+                    </div>
+                    <button id="addQuick" class="primary">+ Quick Task</button>
+                </div>
+
+                <div class="columns">
+                    <div class="column" id="todayColumn">
+                        <div class="column-header"><h3>Today's Plan</h3></div>
+                        <div class="scroll-area">
+                            <ul id="todayList" class="bubble-list droppable" aria-label="Today list"></ul>
+                        </div>
+                        <div class="panel-footer">
+                            <div id="todaySummary" class="summary"></div>
+                        </div>
+                    </div>
+
+                    <div class="column" id="backlogColumn">
+                        <div class="column-header">
+                            <h3>Backlog</h3>
+                            <div class="inline-add">
+                                <input id="backlogInput" type="text" placeholder="Add backlog item..." />
+                                <input id="backlogEstimate" type="number" min="0" placeholder="min" />
+                                <button id="addBacklog" class="secondary">Add</button>
+                            </div>
+                        </div>
+                        <div class="scroll-area">
+                            <ul id="backlogList" class="bubble-list droppable" aria-label="Backlog list"></ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tab-backlog" class="tab-panel">
+                <div class="panel-header">
+                    <h2>Backlog</h2>
+                </div>
+                <ul id="backlogListFull" class="bubble-list droppable"></ul>
+            </section>
+
+            <section id="tab-analytics" class="tab-panel">
+                <div class="panel-header">
+                    <h2>Analytics</h2>
+                </div>
+                <div class="analytics">
+                    <div class="analytics-card">
+                        <h3>Streak Heatmap (last 8 weeks)</h3>
+                        <div id="heatmap" class="heatmap"></div>
+                    </div>
+                    <div class="analytics-card">
+                        <h3>Estimated vs Actual</h3>
+                        <div id="timeStats"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tab-settings" class="tab-panel">
+                <div class="panel-header">
+                    <h2>Settings</h2>
+                </div>
+                <div class="settings">
+                    <label>
+                        Day rollover hour
+                        <input id="rolloverHour" type="number" min="0" max="23" />
+                    </label>
+                    <label>
+                        Exercise progression: on miss
+                        <select id="progressionMiss">
+                            <option value="hold">Hold current day</option>
+                            <option value="reset">Reset to Day 1</option>
+                        </select>
+                    </label>
+                    <button id="saveSettings" class="primary">Save</button>
+                    <button id="clearTodayExtras" class="secondary">Clear non-scheduled from Today</button>
+                    <button id="resetAll" class="secondary">Reset all local data</button>
+                    <div class="divider"></div>
+                    <div>
+                        <h3>Data Storage</h3>
+                        <p id="storageStatus" class="sub"></p>
+                        <div class="inline-add">
+                            <button id="useFileStorage" class="secondary">Use JSON file (autosave)</button>
+                            <button id="stopFileStorage" class="secondary">Use browser storage</button>
+                        </div>
+                        <div class="inline-add" style="margin-top: 6px;">
+                            <button id="exportJson" class="secondary">Export JSON</button>
+                            <input id="importJsonInput" type="file" accept="application/json" style="display:none" />
+                            <button id="importJson" class="secondary">Import JSON</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="divider"></div>
+                <div class="panel-header">
+                    <h3>Morning Briefing (local)</h3>
+                </div>
+                <pre id="briefing" class="briefing"></pre>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
